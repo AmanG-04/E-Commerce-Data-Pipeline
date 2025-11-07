@@ -1,23 +1,31 @@
 from kafka import KafkaConsumer
-import pymongo
+import json
+from pymongo import MongoClient
 
-# Connect to MongoDB
-mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
-db = mongo_client["ecommerce_db"]
-collection = db["orders"]
-
-# Create Kafka Consumer
+# Add connection timeout and retry settings
 consumer = KafkaConsumer(
     'ecommerce_orders',
-    bootstrap_servers='10.12.46.224:9092',
-    auto_offset_reset='earliest',
+    bootstrap_servers=['localhost:9092'],
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+    group_id='ecommerce_group',
+    auto_offset_reset='earliest',  # Start from beginning
     enable_auto_commit=True,
-    group_id='ecommerce_group'
+    api_version=(0, 10, 1),        # Specify API version
 )
 
-# Read messages and store in MongoDB
-print("📥 Listening for messages...")
-for msg in consumer:
-    message = msg.value.decode("utf-8")
-    print(f"✅ Received: {message}")  # Debugging line
-    collection.insert_one({"order": message})
+# MongoDB connection
+client = MongoClient('mongodb://localhost:27017/')
+db = client['ecommerce_db']
+collection = db['orders']
+
+print("Consumer started, waiting for messages...")
+
+try:
+    for message in consumer:
+        order = message.value
+        collection.insert_one(order)
+        print(f"Consumed and stored order: {order}")
+except Exception as e:
+    print(f"Error: {e}")
+finally:
+    consumer.close()
