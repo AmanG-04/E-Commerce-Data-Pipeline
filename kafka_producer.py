@@ -5,7 +5,7 @@ import random
 
 producer = KafkaProducer(
     bootstrap_servers='localhost:9092',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    value_serializer=lambda v: json.dumps(v).encode('utf-8') # Serialize data to JSON byte string, ready for Kafka.
 )
 
 products = ["Laptop", "Smartphone", "Headphones", "Keyboard", "Mouse"]
@@ -15,11 +15,11 @@ while True:
     order = {
         "user": random.choice(users),
         "product": random.choice(products),
-        "price": round(random.uniform(10, 1000), 2),
+        "price": round(random.uniform(10, 1000), 2), # B/w 10 and 1000 2 decimal places
         "timestamp": time.time()
     }
     
-    producer.send('ecommerce_orders', order)
+    producer.send('ecommerce_orders', order) # Send order to Kafka topic
     print(f"Produced Order: {order}")
     
     time.sleep(2)  # Simulates real-time order streaming

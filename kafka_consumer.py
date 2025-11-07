@@ -6,10 +6,10 @@ from pymongo import MongoClient
 consumer = KafkaConsumer(
     'ecommerce_orders',
     bootstrap_servers=['localhost:9092'],
-    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')), # Deserialize JSON byte string to Python dict
     group_id='ecommerce_group',
     auto_offset_reset='earliest',  # Start from beginning
-    enable_auto_commit=True,
+    enable_auto_commit=True, 
     api_version=(0, 10, 1),        # Specify API version
 )
 
